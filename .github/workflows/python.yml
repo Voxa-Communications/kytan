@@ -1,5 +1,4 @@
-name: Python CI
-
+name: PythonCI
 on:
   push:
     branches: [ main, develop ]

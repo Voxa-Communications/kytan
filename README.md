@@ -1,3 +1,5 @@
+[![Rust CI](https://github.com/Voxa-Communications/kytan/workflows/RustCI/badge.svg)](https://github.com/Voxa-Communications/kytan/actions/workflows/rust.yml)
+[![Python CI](https://github.com/Voxa-Communications/kytan/workflows/PythonCI/badge.svg)](https://github.com/Voxa-Communications/kytan/actions/workflows/python.yml)
 [![codecov](https://codecov.io/gh/Voxa-Communications/kytan/branch/master/graph/badge.svg)](https://codecov.io/gh/Voxa-Communications/kytan)
 
 This is a modernized fork. Orginal Repo can be found [here](https://github.com/changlan/kytan)
