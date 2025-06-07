@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools-scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kytan-py"
+version = "0.1.0"
+authors = [
+    {name = "kytan-py contributors"},
+]
+description = "Python wrapper for kytan VPN - High Performance Peer-to-Peer VPN"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.7"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Networking",
+    "Topic :: Internet :: Proxy Servers",
+    "Topic :: Security",
+]
+keywords = ["vpn", "networking", "security", "peer-to-peer", "tunnel"]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "pytest-cov",
+    "black",
+    "flake8",
+    "mypy",
+]
+
+[project.urls]
+Homepage = "https://github.com/Voxa-Communications/kytan"
+Repository = "https://github.com/Voxa-Communications/kytan"
+Issues = "https://github.com/Voxa-Communications/kytan/issues"
+
+[project.scripts]
+kytan-py = "kytan.kytan:main"
+
+[tool.setuptools]
+packages = ["kytan"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+kytan = ["bin/*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py37']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

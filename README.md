@@ -1,5 +1,6 @@
-[![Build Status](https://travis-ci.org/changlan/kytan.svg?branch=master)](https://travis-ci.org/changlan/kytan)
-[![codecov](https://codecov.io/gh/changlan/kytan/branch/master/graph/badge.svg)](https://codecov.io/gh/changlan/kytan)
+[![codecov](https://codecov.io/gh/Voxa-Communications/kytan/branch/master/graph/badge.svg)](https://codecov.io/gh/Voxa-Communications/kytan)
+
+This is a modernized fork. Orginal Repo can be found [here](https://github.com/changlan/kytan)
 
 ## kytan: High Performance Peer-to-Peer VPN
 
@@ -15,13 +16,13 @@ multi-platform support.
 ### Installation
 
 Currently, precompiled `kytan` binaries are available for Linux and macOS.
-You can download them from [releases](https://github.com/changlan/kytan/releases).
+You can download them from [releases](https://github.com/Voxa-Communications/kytan/releases).
 
 Alternatively, you can compile it from source if
 your machine is installed with [Rust](https://www.rust-lang.org/en-US/install.html).
 
 ```
-$ git clone https://github.com/changlan/kytan.git
+$ git clone https://github.com/Voxa-Communications/kytan.git
 $ cd kytan
 $ cargo build --release
 ```

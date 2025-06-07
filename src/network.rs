@@ -14,11 +14,11 @@
 
 use crate::device;
 use crate::utils;
-use bincode::{deserialize, serialize};
+use bincode::{Decode, Encode};
 use dns_lookup;
 use log::{info, warn};
 use mio;
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 use ring::{aead, pbkdf2};
 use serde_derive::{Deserialize, Serialize};
 use snap;
@@ -44,7 +44,7 @@ fn generate_add_nonce(_secret: &str) -> (aead::Aad<[u8; 0]>, aead::Nonce) {
     (aad, nonce)
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Encode, Decode, PartialEq, Debug)]
 enum Message {
     Request,
     Response { id: Id, token: Token, dns: String },
@@ -95,7 +95,7 @@ fn initiate(
 ) -> Result<(Id, Token, String), String> {
     let key = derive_keys(secret);
     let req_msg = Message::Request;
-    let encoded_req_msg: Vec<u8> = serialize(&req_msg).map_err(|e| e.to_string())?;
+    let encoded_req_msg: Vec<u8> = bincode::encode_to_vec(&req_msg, bincode::config::standard()).map_err(|e| e.to_string())?;
     let mut encrypted_req_msg = encoded_req_msg.clone();
     encrypted_req_msg.resize(encoded_req_msg.len() + key.algorithm().tag_len(), 0);
     let (aad, nonce) = generate_add_nonce(secret);
@@ -120,14 +120,14 @@ fn initiate(
     let decrypted_buf = key.open_in_place(nonce, aad, &mut buf[0..len]).unwrap();
 
     let dlen = decrypted_buf.len();
-    let resp_msg: Message = deserialize(&decrypted_buf[0..dlen]).map_err(|e| e.to_string())?;
+    let (resp_msg, _): (Message, usize) = bincode::decode_from_slice(&decrypted_buf[0..dlen], bincode::config::standard()).map_err(|e| e.to_string())?;
     match resp_msg {
         Message::Response { id, token, dns } => Ok((id, token, dns)),
         _ => Err(format!("Invalid message {:?} from {}", resp_msg, addr)),
     }
 }
 
-pub fn connect(host: &str, port: u16, default: bool, secret: &str) {
+pub fn connect(host: &str, port: u16, default: bool, secret: &str) -> Result<(), String> {
     info!("Working in client mode.");
     let remote_ip = resolve(host).unwrap();
     let remote_addr = SocketAddr::new(remote_ip, port);
@@ -200,7 +200,7 @@ pub fn connect(host: &str, port: u16, default: bool, secret: &str) {
 
                     let decrypted_buf = key.open_in_place(nonce, aad, &mut buf[0..len]).unwrap();
                     let dlen = decrypted_buf.len();
-                    let msg: Message = deserialize(&decrypted_buf[0..dlen]).unwrap();
+                    let (msg, _): (Message, usize) = bincode::decode_from_slice(&decrypted_buf[0..dlen], bincode::config::standard()).map_err(|e| e.to_string())?;
                     match msg {
                         Message::Request
                         | Message::Response {
@@ -240,7 +240,7 @@ pub fn connect(host: &str, port: u16, default: bool, secret: &str) {
                         token: token,
                         data: encoder.compress_vec(data).unwrap(),
                     };
-                    let encoded_msg = serialize(&msg).unwrap();
+                    let encoded_msg = bincode::encode_to_vec(&msg, bincode::config::standard()).map_err(|e| e.to_string())?;
                     let mut encrypted_msg = encoded_msg.clone();
                     encrypted_msg.resize(encoded_msg.len() + key.algorithm().tag_len(), 0);
                     let (aad, nonce) = generate_add_nonce(secret);
@@ -257,9 +257,10 @@ pub fn connect(host: &str, port: u16, default: bool, secret: &str) {
             }
         }
     }
+    Ok(())
 }
 
-pub fn serve(port: u16, secret: &str, dns: IpAddr) {
+pub fn serve(port: u16, secret: &str, dns: IpAddr) -> Result<(), String> {
     if cfg!(not(target_os = "linux")) {
         panic!("Server mode is only available in Linux!");
     }
@@ -297,7 +298,7 @@ pub fn serve(port: u16, secret: &str, dns: IpAddr) {
 
     let mut events = mio::Events::with_capacity(1024);
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let mut available_ids: Vec<Id> = (2..254).collect();
     let mut client_info: TransientHashMap<Id, (Token, SocketAddr)> = TransientHashMap::new(60);
 
@@ -325,11 +326,11 @@ pub fn serve(port: u16, secret: &str, dns: IpAddr) {
                     let (aad, nonce) = generate_add_nonce(secret);
                     let decrypted_buf = key.open_in_place(nonce, aad, &mut buf[0..len]).unwrap();
                     let dlen = decrypted_buf.len();
-                    let msg: Message = deserialize(&decrypted_buf[0..dlen]).unwrap();
+                    let (msg, _): (Message, usize) = bincode::decode_from_slice(&decrypted_buf[0..dlen], bincode::config::standard()).unwrap();
                     match msg {
                         Message::Request => {
                             let client_id: Id = available_ids.pop().unwrap();
-                            let client_token: Token = rng.gen::<Token>();
+                            let client_token: Token = rng.random::<Token>();
 
                             client_info.insert(client_id, (client_token, addr));
 
@@ -343,7 +344,7 @@ pub fn serve(port: u16, secret: &str, dns: IpAddr) {
                                 token: client_token,
                                 dns: dns.to_string(),
                             };
-                            let encoded_reply = serialize(&reply).unwrap();
+                            let encoded_reply = bincode::encode_to_vec(&reply, bincode::config::standard()).map_err(|e| e.to_string())?;
                             let mut encrypted_reply = encoded_reply.clone();
                             encrypted_reply
                                 .resize(encoded_reply.len() + key.algorithm().tag_len(), 0);
@@ -401,7 +402,7 @@ pub fn serve(port: u16, secret: &str, dns: IpAddr) {
                                 token: token,
                                 data: encoder.compress_vec(data).unwrap(),
                             };
-                            let encoded_msg = serialize(&msg).unwrap();
+                            let encoded_msg = bincode::encode_to_vec(&msg, bincode::config::standard()).unwrap();
                             let mut encrypted_msg = encoded_msg.clone();
                             encrypted_msg.resize(encoded_msg.len() + key.algorithm().tag_len(), 0);
                             let (aad, nonce) = generate_add_nonce(secret);
@@ -420,6 +421,7 @@ pub fn serve(port: u16, secret: &str, dns: IpAddr) {
             }
         }
     }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -428,7 +430,7 @@ mod tests {
     use std::net::Ipv4Addr;
 
     #[cfg(target_os = "linux")]
-    use std::thread;
+    use std::{thread, time};
 
     #[test]
     fn resolve_test() {
