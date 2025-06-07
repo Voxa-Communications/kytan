@@ -2,7 +2,9 @@
 [![Python CI](https://github.com/Voxa-Communications/kytan/workflows/PythonCI/badge.svg)](https://github.com/Voxa-Communications/kytan/actions/workflows/python.yml)
 [![codecov](https://codecov.io/gh/Voxa-Communications/kytan/branch/master/graph/badge.svg)](https://codecov.io/gh/Voxa-Communications/kytan)
 
-This is a modernized fork. Orginal Repo can be found [here](https://github.com/changlan/kytan)
+This is a modernized fork. Orginal Repo can be found [here](https://github.com/changlan/kytan) \
+
+[PYPI](https://pypi.org/project/kytan-py/0.1.0/) | [GitHub](https://github.com/Voxa-Communications/kytan)
 
 ## kytan: High Performance Peer-to-Peer VPN
 
