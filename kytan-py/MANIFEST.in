@@ -3,3 +3,10 @@ include LICENSE
 recursive-include kytan/bin *
 global-exclude __pycache__
 global-exclude *.py[co]
+
+# Include Rust source files and build configuration at the package root
+include Cargo.toml
+include Cargo.lock
+include build.sh
+recursive-include src *.rs
+include ../LICENSE

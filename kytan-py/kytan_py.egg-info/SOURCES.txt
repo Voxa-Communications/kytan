@@ -1,7 +1,15 @@
+Cargo.lock
+Cargo.toml
+LICENSE
 MANIFEST.in
 README.md
+build.sh
+example.py
+kytan.py
 pyproject.toml
 setup.py
+test_installation.py
+../LICENSE
 kytan/__init__.py
 kytan/kytan.py
 kytan/bin/kytan
@@ -12,3 +20,9 @@ kytan_py.egg-info/entry_points.txt
 kytan_py.egg-info/not-zip-safe
 kytan_py.egg-info/requires.txt
 kytan_py.egg-info/top_level.txt
+src/cli.rs
+src/device.rs
+src/main.rs
+src/network.rs
+src/packet.rs
+src/utils.rs

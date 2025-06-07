@@ -333,7 +333,8 @@ def create_server(binary_path: Optional[str] = None) -> KytanServer:
     return KytanServer(binary_path)
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for the kytan-py command line interface"""
     # Simple CLI interface
     import argparse
     import sys
@@ -414,3 +415,7 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Unexpected error: {e}", file=sys.stderr)
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

@@ -45,13 +45,33 @@ def build_kytan():
     
     # Find the project root (where Cargo.toml is located)
     current_dir = Path(__file__).parent.absolute()
-    project_root = current_dir.parent
     
-    if not (project_root / "Cargo.toml").exists():
+    # First try the development layout (parent directory)
+    project_root = current_dir.parent
+    cargo_toml_path = project_root / "Cargo.toml"
+    
+    # If not found, try the packaged layout (files included in the package)
+    if not cargo_toml_path.exists():
+        # Look for Cargo.toml in the current package directory
+        cargo_toml_path = current_dir / "Cargo.toml"
+        if cargo_toml_path.exists():
+            project_root = current_dir
+        else:
+            # Try to find it in the installed package
+            import pkg_resources
+            try:
+                cargo_toml_path = Path(pkg_resources.resource_filename(__name__, 'Cargo.toml'))
+                project_root = cargo_toml_path.parent
+            except:
+                pass
+    
+    if not cargo_toml_path.exists():
         raise FileNotFoundError(
-            f"Could not find Cargo.toml in {project_root}. "
-            "Make sure you're in the correct directory structure."
+            f"Could not find Cargo.toml in any expected location. "
+            "Searched: {project_root}, {current_dir}"
         )
+    
+    print(f"Found Cargo.toml at: {cargo_toml_path}")
     
     # Build the binary
     try:
@@ -78,7 +98,7 @@ def build_kytan():
     
     # Create bin directory in package
     bin_dir = current_dir / "kytan" / "bin"
-    bin_dir.mkdir(exist_ok=True)
+    bin_dir.mkdir(parents=True, exist_ok=True)
     
     binary_dst = bin_dir / "kytan"
     shutil.copy2(binary_src, binary_dst)
@@ -171,6 +191,7 @@ setup(
     include_package_data=True,
     package_data={
         "kytan": ["bin/*"],
+        "": ["Cargo.toml", "Cargo.lock", "build.sh", "src/*.rs", "LICENSE"],
     },
     cmdclass={
         "build_py": BuildCommand,

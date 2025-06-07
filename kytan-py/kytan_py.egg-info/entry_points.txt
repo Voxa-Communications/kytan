@@ -1,3 +1,2 @@
 [console_scripts]
 kytan-py = kytan.kytan:main
-

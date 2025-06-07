@@ -1,364 +1,17 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: kytan-py
 Version: 0.1.0
 Summary: Python wrapper for kytan VPN - High Performance Peer-to-Peer VPN
 Home-page: https://github.com/changlan/kytan
 Author: kytan-py contributors
-License: UNKNOWN
-Description: # kytan-py: Python Wrapper for kytan VPN
-        
-        A Python interface to the [kytan](https://github.com/changlan/kytan) high-performance peer-to-peer VPN application.
-        
-        ## Features
-        
-        - **Easy Integration**: Simple Python API for embedding VPN functionality in applications
-        - **Client & Server Support**: Both client and server modes supported
-        - **Process Management**: Automatic process lifecycle management with proper cleanup
-        - **Logging Integration**: Built-in logging support with configurable levels
-        - **Context Manager Support**: Use with `with` statements for automatic cleanup
-        - **Command Line Interface**: Can be used as a standalone CLI tool
-        - **Self-Contained**: Automatically builds and bundles the kytan binary during installation
-        
-        ## Requirements
-        
-        - Python 3.7+
-        - Rust/Cargo (for building during installation)
-        - Root/sudo privileges (required by kytan)
-        - Linux (server mode) or Linux/macOS (client mode)
-        
-        ## Installation
-        
-        The package will automatically build the kytan Rust binary during installation:
-        
-        ```bash
-        # Install from source (builds kytan binary automatically)
-        cd kytan-py
-        pip install .
-        
-        # Install in development mode (builds kytan binary automatically)
-        pip install -e .
-        
-        # Install with development dependencies
-        pip install -e ".[dev]"
-        ```
-        
-        ### Build Requirements
-        
-        During installation, the package will:
-        1. Check for Rust/Cargo availability
-        2. Build the kytan binary from source using `cargo build --release`
-        3. Bundle the binary with the Python package
-        4. Make it available to the Python wrapper
-        
-        If you don't have Rust installed, you can install it from [https://rustup.rs/](https://rustup.rs/).
-        
-        ## Quick Start
-        
-        ### As a Python Library
-        
-        #### Client Mode
-        
-        ```python
-        from kytan import create_client
-        
-        # Create and connect client (uses bundled kytan binary automatically)
-        client = create_client()
-        client.connect(
-            server="your-server.com",
-            port=9527,
-            key="your-secret-key"
-        )
-        
-        # Check status
-        status = client.get_status()
-        print(f"Connected: {status['running']}")
-        
-        # Disconnect
-        client.disconnect()
-        ```
-        
-        #### Server Mode
-        
-        ```python
-        from kytan import create_server
-        
-        # Create and start server (uses bundled kytan binary automatically)
-        server = create_server()
-        server.serve(
-            port=9527,
-            key="your-secret-key",
-            bind="0.0.0.0",
-            dns="8.8.8.8"
-        )
-        
-        # Check status
-        status = server.get_status()
-        print(f"Server running: {status['running']}")
-        
-        # Shutdown
-        server.shutdown()
-        ```
-        
-        #### Using Context Managers
-        
-        ```python
-        from kytan import create_client, KytanContextManager
-        
-        # Automatic cleanup when exiting context
-        with KytanContextManager(create_client()) as client:
-            client.connect("server.com", 9527, "secret-key")
-            # Do work...
-            # Client automatically disconnects when exiting
-        ```
-        
-        ### As a Command Line Tool
-        
-        ```bash
-        # Client mode (uses bundled binary)
-        sudo kytan-py client -s server.com -p 9527 -k secret-key
-        
-        # Server mode  
-        sudo kytan-py server -p 9527 -k secret-key -d 8.8.8.8
-        
-        # With custom log level
-        sudo RUST_LOG=debug kytan-py client -s server.com -p 9527 -k secret-key --log-level debug
-        ```
-        
-        ## API Reference
-        
-        ### Classes
-        
-        #### `KytanClient`
-        
-        Main client class for connecting to kytan VPN servers.
-        
-        **Methods:**
-        - `connect(server, port, key, no_default_route=False, log_level="info")`: Connect to server
-        - `disconnect(timeout=10)`: Disconnect from server
-        - `get_status()`: Get connection status
-        - `get_logs(lines=50)`: Get recent log output
-        
-        #### `KytanServer`
-        
-        Main server class for running kytan VPN servers.
-        
-        **Methods:**
-        - `serve(port=9527, key="", bind="0.0.0.0", dns="8.8.8.8", log_level="info")`: Start server
-        - `shutdown(timeout=10)`: Shutdown server
-        - `get_status()`: Get server status
-        - `get_logs(lines=50)`: Get recent log output
-        
-        #### `ClientConfig` / `ServerConfig`
-        
-        Configuration dataclasses for client and server settings.
-        
-        ### Functions
-        
-        - `create_client(binary_path=None)`: Create a new client instance
-        - `create_server(binary_path=None)`: Create a new server instance
-        
-        ### Exceptions
-        
-        - `KytanError`: Base exception for kytan-related errors
-        
-        ## Configuration
-        
-        ### Binary Path
-        
-        The wrapper will automatically use the bundled kytan binary that was built during installation. If you need to use a different binary, you can specify a custom path:
-        
-        ```python
-        client = create_client(binary_path="/path/to/custom/kytan")
-        ```
-        
-        The search order is:
-        1. Bundled binary (built during pip install)
-        2. Custom path if specified
-        3. PATH environment variable
-        4. Common system locations
-        
-        ### Logging
-        
-        Set the `RUST_LOG` environment variable or use the `log_level` parameter:
-        
-        ```python
-        # Environment variable
-        import os
-        os.environ['RUST_LOG'] = 'debug'
-        
-        # Or via parameter
-        client.connect(server="...", port=9527, key="...", log_level="debug")
-        ```
-        
-        Available log levels: `error`, `warn`, `info`, `debug`, `trace`
-        
-        ## Development
-        
-        ### Building from Source
-        
-        If you're developing or want to build manually:
-        
-        ```bash
-        # Clone the repository
-        git clone https://github.com/changlan/kytan.git
-        cd kytan
-        
-        # Install in development mode (builds kytan automatically)
-        cd kytan-py
-        pip install -e .
-        
-        # Or build kytan manually first
-        cd ..
-        cargo build --release
-        cd kytan-py
-        pip install -e .
-        ```
-        
-        ### Running Tests
-        
-        ```bash
-        # Install with development dependencies
-        pip install -e ".[dev]"
-        
-        # Run tests
-        pytest
-        
-        # Run with coverage
-        pytest --cov=kytan
-        ```
-        
-        ## Examples
-        
-        ### Advanced Client Usage
-        
-        ```python
-        import time
-        import logging
-        from kytan import create_client, KytanError
-        
-        # Set up logging
-        logging.basicConfig(level=logging.INFO)
-        
-        try:
-            # Uses bundled binary automatically
-            client = create_client()
-            
-            # Connect with custom settings
-            client.connect(
-                server="vpn.example.com",
-                port=9527,
-                key="my-secret-key",
-                no_default_route=True,  # Don't change default route
-                log_level="info"
-            )
-            
-            print("Connected successfully!")
-            
-            # Monitor connection
-            while True:
-                status = client.get_status()
-                if not status["running"]:
-                    print("Connection lost!")
-                    break
-                
-                print(f"Status: Connected (PID: {status['pid']})")
-                time.sleep(10)
-                
-        except KytanError as e:
-            print(f"VPN Error: {e}")
-        except KeyboardInterrupt:
-            print("Disconnecting...")
-        finally:
-            client.disconnect()
-        ```
-        
-        ### Server with Custom DNS
-        
-        ```python
-        from kytan import create_server
-        
-        # Uses bundled binary automatically
-        server = create_server()
-        
-        try:
-            server.serve(
-                port=9527,
-                key="server-secret-key",
-                bind="0.0.0.0",
-                dns="1.1.1.1",  # Use Cloudflare DNS
-                log_level="info"
-            )
-            
-            print("Server started on port 9527")
-            
-            # Keep server running
-            while server.get_status()["running"]:
-                time.sleep(1)
-                
-        except KeyboardInterrupt:
-            print("Shutting down server...")
-        finally:
-            server.shutdown()
-        ```
-        
-        ## Security Notes
-        
-        - Always use strong, unique encryption keys
-        - Run with minimal required privileges
-        - Consider using a dedicated user account for VPN operations
-        - Monitor logs for suspicious activity
-        - Keep the package updated to get the latest kytan binary
-        
-        ## Troubleshooting
-        
-        ### Common Issues
-        
-        1. **"Cargo (Rust) is required to build kytan"**
-           - Install Rust from https://rustup.rs/
-           - Ensure `cargo` is in your PATH
-        
-        2. **"Failed to build kytan"**
-           - Check that you have the necessary build dependencies
-           - Ensure you're in the correct directory structure
-           - Try building kytan manually first: `cargo build --release`
-        
-        3. **"kytan requires root privileges"**
-           - Run with `sudo` or as root user
-           - VPN operations require elevated privileges
-        
-        4. **Connection timeouts**
-           - Check firewall settings
-           - Verify server is running and accessible
-           - Ensure correct port and encryption key
-        
-        ### Debug Mode
-        
-        Enable debug logging to troubleshoot issues:
-        
-        ```python
-        client.connect(..., log_level="debug")
-        ```
-        
-        ## License
-        
-        This Python wrapper follows the same Apache 2.0 license as the original kytan project.
-        
-        ## Contributing
-        
-        Contributions are welcome! Please ensure:
-        - Code follows PEP 8 style guidelines
-        - Include tests for new functionality  
-        - Update documentation as needed
-        
-        ## Related Projects
-        
-        - [kytan](https://github.com/changlan/kytan) - The original Rust VPN implementation
+License: Apache-2.0
+Project-URL: Homepage, https://github.com/Voxa-Communications/kytan
+Project-URL: Repository, https://github.com/Voxa-Communications/kytan
+Project-URL: Issues, https://github.com/Voxa-Communications/kytan/issues
 Keywords: vpn,networking,security,peer-to-peer,tunnel
-Platform: UNKNOWN
 Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: System Administrators
-Classifier: License :: OSI Approved :: Apache Software License
 Classifier: Operating System :: POSIX :: Linux
 Classifier: Operating System :: MacOS
 Classifier: Programming Language :: Python :: 3
@@ -373,4 +26,362 @@ Classifier: Topic :: Internet :: Proxy Servers
 Classifier: Topic :: Security
 Requires-Python: >=3.7
 Description-Content-Type: text/markdown
+License-File: LICENSE
 Provides-Extra: dev
+Requires-Dist: pytest>=6.0; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
+Requires-Dist: black; extra == "dev"
+Requires-Dist: flake8; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-python
+
+# kytan-py: Python Wrapper for kytan VPN
+
+A Python interface to the [kytan](https://github.com/Voxa-Communications/kytan) high-performance peer-to-peer VPN application.
+
+## Features
+
+- **Easy Integration**: Simple Python API for embedding VPN functionality in applications
+- **Client & Server Support**: Both client and server modes supported
+- **Process Management**: Automatic process lifecycle management with proper cleanup
+- **Logging Integration**: Built-in logging support with configurable levels
+- **Context Manager Support**: Use with `with` statements for automatic cleanup
+- **Command Line Interface**: Can be used as a standalone CLI tool
+- **Self-Contained**: Automatically builds and bundles the kytan binary during installation
+
+## Requirements
+
+- Python 3.7+
+- Rust/Cargo (for building during installation)
+- Root/sudo privileges (required by kytan)
+- Linux (server mode) or Linux/macOS (client mode)
+
+## Installation
+
+The package will automatically build the kytan Rust binary during installation:
+
+```bash
+# Install from source (builds kytan binary automatically)
+cd kytan-py
+pip install .
+
+# Install in development mode (builds kytan binary automatically)
+pip install -e .
+
+# Install with development dependencies
+pip install -e ".[dev]"
+```
+
+### Build Requirements
+
+During installation, the package will:
+1. Check for Rust/Cargo availability
+2. Build the kytan binary from source using `cargo build --release`
+3. Bundle the binary with the Python package
+4. Make it available to the Python wrapper
+
+If you don't have Rust installed, you can install it from [https://rustup.rs/](https://rustup.rs/).
+
+## Quick Start
+
+### As a Python Library
+
+#### Client Mode
+
+```python
+from kytan import create_client
+
+# Create and connect client (uses bundled kytan binary automatically)
+client = create_client()
+client.connect(
+    server="your-server.com",
+    port=9527,
+    key="your-secret-key"
+)
+
+# Check status
+status = client.get_status()
+print(f"Connected: {status['running']}")
+
+# Disconnect
+client.disconnect()
+```
+
+#### Server Mode
+
+```python
+from kytan import create_server
+
+# Create and start server (uses bundled kytan binary automatically)
+server = create_server()
+server.serve(
+    port=9527,
+    key="your-secret-key",
+    bind="0.0.0.0",
+    dns="8.8.8.8"
+)
+
+# Check status
+status = server.get_status()
+print(f"Server running: {status['running']}")
+
+# Shutdown
+server.shutdown()
+```
+
+#### Using Context Managers
+
+```python
+from kytan import create_client, KytanContextManager
+
+# Automatic cleanup when exiting context
+with KytanContextManager(create_client()) as client:
+    client.connect("server.com", 9527, "secret-key")
+    # Do work...
+    # Client automatically disconnects when exiting
+```
+
+### As a Command Line Tool
+
+```bash
+# Client mode (uses bundled binary)
+sudo kytan-py client -s server.com -p 9527 -k secret-key
+
+# Server mode  
+sudo kytan-py server -p 9527 -k secret-key -d 8.8.8.8
+
+# With custom log level
+sudo RUST_LOG=debug kytan-py client -s server.com -p 9527 -k secret-key --log-level debug
+```
+
+## API Reference
+
+### Classes
+
+#### `KytanClient`
+
+Main client class for connecting to kytan VPN servers.
+
+**Methods:**
+- `connect(server, port, key, no_default_route=False, log_level="info")`: Connect to server
+- `disconnect(timeout=10)`: Disconnect from server
+- `get_status()`: Get connection status
+- `get_logs(lines=50)`: Get recent log output
+
+#### `KytanServer`
+
+Main server class for running kytan VPN servers.
+
+**Methods:**
+- `serve(port=9527, key="", bind="0.0.0.0", dns="8.8.8.8", log_level="info")`: Start server
+- `shutdown(timeout=10)`: Shutdown server
+- `get_status()`: Get server status
+- `get_logs(lines=50)`: Get recent log output
+
+#### `ClientConfig` / `ServerConfig`
+
+Configuration dataclasses for client and server settings.
+
+### Functions
+
+- `create_client(binary_path=None)`: Create a new client instance
+- `create_server(binary_path=None)`: Create a new server instance
+
+### Exceptions
+
+- `KytanError`: Base exception for kytan-related errors
+
+## Configuration
+
+### Binary Path
+
+The wrapper will automatically use the bundled kytan binary that was built during installation. If you need to use a different binary, you can specify a custom path:
+
+```python
+client = create_client(binary_path="/path/to/custom/kytan")
+```
+
+The search order is:
+1. Bundled binary (built during pip install)
+2. Custom path if specified
+3. PATH environment variable
+4. Common system locations
+
+### Logging
+
+Set the `RUST_LOG` environment variable or use the `log_level` parameter:
+
+```python
+# Environment variable
+import os
+os.environ['RUST_LOG'] = 'debug'
+
+# Or via parameter
+client.connect(server="...", port=9527, key="...", log_level="debug")
+```
+
+Available log levels: `error`, `warn`, `info`, `debug`, `trace`
+
+## Development
+
+### Building from Source
+
+If you're developing or want to build manually:
+
+```bash
+# Clone the repository
+git clone https://github.com/changlan/kytan.git
+cd kytan
+
+# Install in development mode (builds kytan automatically)
+cd kytan-py
+pip install -e .
+
+# Or build kytan manually first
+cd ..
+cargo build --release
+cd kytan-py
+pip install -e .
+```
+
+### Running Tests
+
+```bash
+# Install with development dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run with coverage
+pytest --cov=kytan
+```
+
+## Examples
+
+### Advanced Client Usage
+
+```python
+import time
+import logging
+from kytan import create_client, KytanError
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+
+try:
+    # Uses bundled binary automatically
+    client = create_client()
+    
+    # Connect with custom settings
+    client.connect(
+        server="vpn.example.com",
+        port=9527,
+        key="my-secret-key",
+        no_default_route=True,  # Don't change default route
+        log_level="info"
+    )
+    
+    print("Connected successfully!")
+    
+    # Monitor connection
+    while True:
+        status = client.get_status()
+        if not status["running"]:
+            print("Connection lost!")
+            break
+        
+        print(f"Status: Connected (PID: {status['pid']})")
+        time.sleep(10)
+        
+except KytanError as e:
+    print(f"VPN Error: {e}")
+except KeyboardInterrupt:
+    print("Disconnecting...")
+finally:
+    client.disconnect()
+```
+
+### Server with Custom DNS
+
+```python
+from kytan import create_server
+
+# Uses bundled binary automatically
+server = create_server()
+
+try:
+    server.serve(
+        port=9527,
+        key="server-secret-key",
+        bind="0.0.0.0",
+        dns="1.1.1.1",  # Use Cloudflare DNS
+        log_level="info"
+    )
+    
+    print("Server started on port 9527")
+    
+    # Keep server running
+    while server.get_status()["running"]:
+        time.sleep(1)
+        
+except KeyboardInterrupt:
+    print("Shutting down server...")
+finally:
+    server.shutdown()
+```
+
+## Security Notes
+
+- Always use strong, unique encryption keys
+- Run with minimal required privileges
+- Consider using a dedicated user account for VPN operations
+- Monitor logs for suspicious activity
+- Keep the package updated to get the latest kytan binary
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"Cargo (Rust) is required to build kytan"**
+   - Install Rust from https://rustup.rs/
+   - Ensure `cargo` is in your PATH
+
+2. **"Failed to build kytan"**
+   - Check that you have the necessary build dependencies
+   - Ensure you're in the correct directory structure
+   - Try building kytan manually first: `cargo build --release`
+
+3. **"kytan requires root privileges"**
+   - Run with `sudo` or as root user
+   - VPN operations require elevated privileges
+
+4. **Connection timeouts**
+   - Check firewall settings
+   - Verify server is running and accessible
+   - Ensure correct port and encryption key
+
+### Debug Mode
+
+Enable debug logging to troubleshoot issues:
+
+```python
+client.connect(..., log_level="debug")
+```
+
+## License
+
+This Python wrapper follows the same Apache 2.0 license as the original kytan project.
+
+## Contributing
+
+Contributions are welcome! Please ensure:
+- Code follows PEP 8 style guidelines
+- Include tests for new functionality  
+- Update documentation as needed
+
+## Related Projects
+
+- [kytan](https://github.com/changlan/kytan) - The original Rust VPN implementation
